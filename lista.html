@@ -91,51 +91,58 @@
     </div>
 
     <script>
-        // === POPRAWIONA KONFIGURACJA SUPABASE (BEZ REST/V1/) ===
         const SUPABASE_URL = 'https://lytnirtzfmbhctmtdykk.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5dG5pcnR6Zm1iaGN0bXRkeWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MTQ1ODAsImV4cCI6MjA5NTM5MDU4MH0.wSnKSi-XHmS5uVsaqdlzI7TMDmHawqkVRQv9Tvv-wY8';
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        let allGifts = []; // Globalny stan przechowujący załadowane prezenty
+        let allGifts = []; 
         let currentGiftId = null;
 
         document.addEventListener('DOMContentLoaded', fetchGifts);
 
-        // Pobieranie surowych danych z tabeli 'gifts'
         async function fetchGifts() {
             try {
                 const { data: gifts, error } = await supabaseClient
                     .from('gifts')
-                    .select('*')
-                    .order('gift_id', { ascending: true });
+                    .select('*');
 
                 if (error) throw error;
                 
                 allGifts = gifts;
-                filterAndRenderGifts(); // Pierwsze wyrenderowanie po sukcesie
+                filterAndRenderGifts(); 
             } catch (error) {
                 console.error('Błąd podczas pobierania danych:', error);
-                alert('Nie udało się załadować listy prezentów. Sprawdź konfigurację połączenia w kodzie.');
+                alert('Nie udało się załadować listy prezentów.');
             } finally {
                 document.getElementById('loader').classList.add('hidden');
                 document.getElementById('gifts-container').classList.remove('hidden');
             }
         }
 
-        // System filtrowania i sortowania po stronie klienta (natychmiastowe działanie)
+        // Funkcja pomocnicza do dynamicznego pobierania wartości pól na podstawie dostępnych kluczy w bazie
+        function getGiftValue(gift, keysArray) {
+            for (let key of keysArray) {
+                if (gift && key in gift && gift[key] !== undefined && gift[key] !== null) {
+                    return gift[key];
+                }
+            }
+            return null;
+        }
+
         function filterAndRenderGifts() {
             const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
             const statusFilter = document.getElementById('status-filter').value;
             const sortFilter = document.getElementById('sort-filter').value;
 
-            // 1. Filtrowanie danych
             let filteredGifts = allGifts.filter(gift => {
-                const title = (gift.gift_title || '').toLowerCase();
-                const description = (gift.gift_description || '').toLowerCase();
+                const title = String(getGiftValue(gift, ['title', 'gift_title', 'nazwa']) || '').toLowerCase();
+                const description = String(getGiftValue(gift, ['description', 'gift_description', 'opis']) || '').toLowerCase();
                 const matchesSearch = title.includes(searchQuery) || description.includes(searchQuery);
 
-                const isReserved = !!gift.gift_reserved_by_name;
+                const reservedName = getGiftValue(gift, ['reserved_by_name', 'gift_reserved_by_name', 'reserved_by']);
+                const isReserved = !!reservedName;
+                
                 let matchesStatus = true;
                 if (statusFilter === 'available') matchesStatus = !isReserved;
                 if (statusFilter === 'reserved') matchesStatus = isReserved;
@@ -143,29 +150,33 @@
                 return matchesSearch && matchesStatus;
             });
 
-            // 2. Sortowanie danych
+            // Pobieranie ceny do sortowania
+            const getPriceNum = (gift) => {
+                let p = getGiftValue(gift, ['price', 'gift_price', 'cena']) ?? 0;
+                if (typeof p === 'string') p = p.replace(',', '.').replace(/[^\d.]/g, '');
+                return parseFloat(p) || 0;
+            };
+
+            // Sortowanie
             if (sortFilter === 'price-asc') {
-                filteredGifts.sort((a, b) => (parseFloat(a.gift_price) || 0) - (parseFloat(b.gift_price) || 0));
+                filteredGifts.sort((a, b) => getPriceNum(a) - getPriceNum(b));
             } else if (sortFilter === 'price-desc') {
-                filteredGifts.sort((a, b) => (parseFloat(b.gift_price) || 0) - (parseFloat(a.gift_price) || 0));
+                filteredGifts.sort((a, b) => getPriceNum(b) - getPriceNum(a));
             } else if (sortFilter === 'rating-desc') {
-                filteredGifts.sort((a, b) => (parseInt(b.gift_rating) || 0) - (parseInt(a.gift_rating) || 0));
+                const getRating = (g) => parseInt(getGiftValue(g, ['rating', 'gift_rating', 'priorytet'])) || 5;
+                filteredGifts.sort((a, b) => getRating(b) - getRating(a));
             }
 
-            // 3. Wywołanie renderowania przefiltrowanej tablicy
             renderGifts(filteredGifts);
         }
 
-        // Pomocnicza funkcja generująca gwiazdki priorytetu (Skala 1-5)
         function generateStarsHtml(rating) {
             const maxStars = 5;
             const currentRating = Math.min(Math.max(parseInt(rating) || 5, 1), maxStars);
-            let starsHtml = '<div class="flex items-center space-x-0.5" title="Priorytet: ' + currentRating + '/5">';
-            
+            let starsHtml = '<div class="flex items-center space-x-0.5">';
             for (let i = 1; i <= maxStars; i++) {
-                const isFilled = i <= currentRating;
                 starsHtml += `
-                    <svg class="w-4 h-4 ${isFilled ? 'text-amber-400' : 'text-slate-200'}" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="w-4 h-4 ${i <= currentRating ? 'text-amber-400' : 'text-slate-200'}" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
                     </svg>
                 `;
@@ -174,32 +185,47 @@
             return starsHtml;
         }
 
-        // Renderowanie kart prezentów na ekranie
         function renderGifts(gifts) {
             const container = document.getElementById('gifts-container');
             container.innerHTML = ''; 
 
             if (gifts.length === 0) {
-                container.innerHTML = '<p class="text-center text-slate-500 col-span-full py-12 font-medium">Brak prezentów spełniających kryteria wyszukiwania.</p>';
+                container.innerHTML = '<p class="text-center text-slate-500 col-span-full py-12 font-medium">Brak prezentów spełniających kryteria.</p>';
                 return;
             }
 
             gifts.forEach(gift => {
-                const title = gift.gift_title || 'Prezent';
-                const description = gift.gift_description || 'Brak dodatkowego opisu.';
-                const link = gift.gift_link || '#';
-                const price = gift.gift_price ? `${parseFloat(gift.gift_price).toFixed(2)} PLN` : 'Brak ceny';
-                const rating = gift.gift_rating || 5;
-                const isReserved = !!gift.gift_reserved_by_name;
+                // Wyciąganie wartości z automatycznym dopasowaniem pól
+                const title = getGiftValue(gift, ['title', 'gift_title', 'nazwa']) || 'Prezent';
+                const description = getGiftValue(gift, ['description', 'gift_description', 'opis']) || 'Brak dodatkowego opisu.';
+                const link = getGiftValue(gift, ['link', 'gift_link', 'site_url', 'url']) || '#';
+                const rating = getGiftValue(gift, ['rating', 'gift_rating', 'priorytet']) || 5;
+                const id = getGiftValue(gift, ['id', 'gift_id', 'ID']);
                 
-                // Odczyt adresu zdjęcia z bazy, lub elegancki uniwersalny prezent jako fallback
-                const imageUrl = gift.gift_image_url || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=500&q=80';
+                const reservedName = getGiftValue(gift, ['reserved_by_name', 'gift_reserved_by_name', 'reserved_by']);
+                const isReserved = !!reservedName;
+                
+                // Parsowanie ceny
+                let rawPrice = getGiftValue(gift, ['price', 'gift_price', 'cena']);
+                let priceDisplay = 'Brak ceny';
+                if (rawPrice !== undefined && rawPrice !== null && rawPrice !== '') {
+                    if (typeof rawPrice === 'string') {
+                        rawPrice = rawPrice.replace(',', '.').replace(/[^\d.]/g, '');
+                    }
+                    const parsedPrice = parseFloat(rawPrice);
+                    if (!isNaN(parsedPrice)) priceDisplay = `${parsedPrice.toFixed(2)} PLN`;
+                }
+
+                // Pobieranie linku do zdjęcia
+                let rawImage = getGiftValue(gift, ['image_url', 'gift_image_url', 'image', 'gift_image', 'zdjecie', 'foto']);
+                let imageUrl = 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=500&q=80';
+                if (rawImage && typeof rawImage === 'string' && rawImage.trim() !== '') {
+                    imageUrl = rawImage.trim();
+                }
 
                 const card = document.createElement('div');
                 card.className = `bg-white rounded-2xl border flex flex-col overflow-hidden shadow-sm transition-all duration-300 ${
-                    isReserved 
-                        ? 'border-slate-200 opacity-60 grayscale-[15%]' 
-                        : 'border-slate-100 hover:border-slate-200 hover:shadow-xl hover:-translate-y-1'
+                    isReserved ? 'border-slate-200 opacity-60' : 'border-slate-100 hover:border-slate-200 hover:shadow-xl hover:-translate-y-1'
                 }`;
 
                 card.innerHTML = `
@@ -218,9 +244,8 @@
                         <div class="space-y-2">
                             <div class="flex items-center justify-between">
                                 ${generateStarsHtml(rating)}
-                                <span class="text-xs font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">${price}</span>
+                                <span class="text-xs font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">${priceDisplay}</span>
                             </div>
-
                             <h2 class="text-base font-black text-slate-900 tracking-tight leading-snug line-clamp-2">${title}</h2>
                             <p class="text-slate-500 text-xs font-medium leading-relaxed line-clamp-3">${description}</p>
                         </div>
@@ -230,7 +255,7 @@
                             
                             ${isReserved 
                                 ? `<button disabled class="w-full py-3 bg-slate-100 text-slate-400 text-xs font-black rounded-xl uppercase tracking-wider cursor-not-allowed">Prezent zarezerwowany</button>`
-                                : `<button onclick="openModal(${gift.gift_id}, '${title.replace(/'/g, "\\'")}')" class="w-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-black py-3 rounded-xl transition-all shadow-md shadow-orange-500/10 uppercase tracking-wider cursor-pointer text-center">Chcę to podarować</button>`
+                                : `<button onclick="openModal(${id}, '${title.replace(/'/g, "\\'")}')" class="w-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-black py-3 rounded-xl transition-all shadow-md shadow-orange-500/10 uppercase tracking-wider cursor-pointer text-center">Chcę to podarować</button>`
                             }
                         </div>
                     </div>
@@ -239,7 +264,6 @@
             });
         }
 
-        // MODAL I REZERWACJA
         function openModal(id, title) {
             currentGiftId = id;
             document.getElementById('modal-gift-title').innerText = title;
@@ -257,27 +281,33 @@
             const guestName = document.getElementById('guest-name').value.trim();
             const guestEmail = document.getElementById('guest-email').value.trim();
 
-            if (!currentGiftId) return;
+            if (!currentGiftId || allGifts.length === 0) return;
+
+            // Wykrywanie jakich kolumn rezerwacyjnych używa pierwszy rekord
+            const firstGift = allGifts[0];
+            const idKey = 'id' in firstGift ? 'id' : 'gift_id';
+            const resNameKey = 'reserved_by_name' in firstGift ? 'reserved_by_name' : 'gift_reserved_by_name';
+            const resEmailKey = 'reserved_by_email' in firstGift ? 'reserved_by_email' : 'gift_reserved_by_email';
+            const resAtKey = 'reserved_at' in firstGift ? 'reserved_at' : 'gift_reserved_at';
 
             try {
+                const updateData = {};
+                updateData[resNameKey] = guestName;
+                updateData[resEmailKey] = guestEmail;
+                updateData[resAtKey] = new Date().toISOString();
+
                 const { error } = await supabaseClient
                     .from('gifts')
-                    .update({
-                        gift_reserved_by_name: guestName,
-                        gift_reserved_by_email: guestEmail,
-                        gift_reserved_at: new Date().toISOString()
-                    })
-                    .eq('gift_id', currentGiftId);
+                    .update(updateData)
+                    .eq(idKey, currentGiftId);
 
                 if (error) throw error;
 
                 closeModal();
-                // Przekierowanie do strony podziękowania z zachowaniem parametrów dla webhooka n8n
                 window.location.href = `przekierowanie.html?gift_id=${currentGiftId}&name=${encodeURIComponent(guestName)}&email=${encodeURIComponent(guestEmail)}`;
-
             } catch (error) {
                 console.error('Błąd rezerwacji:', error);
-                alert('Wystąpił problem z rezerwacją prezentu. Spróbuj ponownie.');
+                alert('Wystąpił problem z rezerwacją.');
             }
         }
     </script>
