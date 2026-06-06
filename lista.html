@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chcetoo.pl - Lista Marzeń</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body class="bg-gray-50 font-sans text-gray-900 min-h-screen pb-12">
 
-    <!-- NAGŁÓWEK STRONY -->
     <header class="bg-white shadow-sm py-6 mb-8">
         <div class="max-w-4xl mx-auto px-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-indigo-600">chcetoo.pl</h1>
@@ -19,22 +16,17 @@
         </div>
     </header>
 
-    <!-- KONTENER GŁÓWNY -->
     <main class="max-w-4xl mx-auto px-4">
         
-        <!-- LOADER (Ekran ładowania) -->
         <div id="loader" class="text-center py-12">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
             <p class="text-gray-600 font-medium">Ładowanie listy marzeń...</p>
         </div>
 
-        <!-- SIATKA Z PREZENTAMI (Początkowo ukryta) -->
         <div id="gifts-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
-            <!-- Tutaj JavaScript wstrzyknie karty prezentów -->
-        </div>
+            </div>
     </main>
 
-    <!-- MODAL REZERWACJI (Okienko popup) -->
     <div id="reservation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden z-50">
         <div class="bg-white p-6 rounded-xl shadow-xl max-w-md w-full mx-4">
             <h3 class="text-lg font-bold text-gray-900 mb-2">Rezerwujesz prezent</h3>
@@ -62,16 +54,14 @@
         </div>
     </div>
 
-    <!-- LOGIKA JAVASCRIPT -->
     <script>
         // ====================================================================
         // 1. KONFIGURACJA SUPABASE
         // ====================================================================
-        // UWAGA: Wklej tutaj swoje poprawne dane dostępowe z panelu Supabase!
         const SUPABASE_URL = 'https://lytnirtzfmbhctmtdykk.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5dG5pcnR6Zm1iaGN0bXRkeWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MTQ1ODAsImV4cCI6MjA5NTM5MDU4MH0.wSnKSi-XHmS5uVsaqdlzI7TMDmHawqkVRQv9Tvv-wY8';
 
-        // Bezpieczna inicjalizacja klienta pod unikalną nazwą zmiennej
+        // Bezpieczna inicjalizacja klienta
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentGiftId = null;
@@ -84,7 +74,7 @@
         // ====================================================================
         async function fetchGifts() {
             try {
-                // Łączymy się z tabelą 'Prezenty' zgodnie z konfiguracją w Supabase
+                // Łączymy się z tabelą 'gifts' i sortujemy po 'gift_id'
                 const { data: gifts, error } = await supabaseClient
                     .from('gifts')
                     .select('*')
@@ -116,13 +106,13 @@
             }
 
             gifts.forEach(gift => {
-                // Wyciągamy dane stosując elastyczne mapowanie (na wypadek miksu nazw angielskich/polskich)
-                const title = gift.gift_title || gift.title || 'Prezent';
-                const description = gift.gift_description || gift.description || 'Brak opisu.';
-                const link = gift.gift_link || gift.link || '';
+                // Ścisłe mapowanie pól bezpośrednio z angielskich kolumn bazy Supabase
+                const title = gift.gift_title || 'Prezent';
+                const description = gift.gift_description || 'Brak opisu.';
+                const link = gift.gift_link || '';
                 
-                // Prezent jest uznawany za zarezerwowany, jeśli pole e-mail lub nazwa rezerwującego nie jest puste
-                const isReserved = !!(gift.gift_reserved_by_email || gift.reserved_by_email || gift.is_reserved);
+                // Prezent jest zarezerwowany, jeśli pole z imieniem w bazie NIE jest puste
+                const isReserved = !!gift.gift_reserved_by_name;
                 
                 const card = document.createElement('div');
                 card.className = `bg-white p-6 rounded-xl shadow-sm border transition flex flex-col justify-between ${isReserved ? 'border-gray-200 opacity-60' : 'border-indigo-100 hover:border-indigo-300'}`;
@@ -142,7 +132,7 @@
                     <div>
                         ${isReserved 
                             ? `<button disabled class="w-full py-2 bg-gray-100 text-gray-400 font-medium rounded-lg cursor-not-allowed">Prezent już zarezerwowany</button>`
-                          : `<button onclick="openModal(${gift.gift_id}, '${title.replace(/'/g, "\\'")}')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition shadow-sm">Chcę to podarować</button>`        
+                            : `<button onclick="openModal(${gift.gift_id}, '${title.replace(/'/g, "\\'")}')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition shadow-sm">Chcę to podarować</button>`
                         }
                     </div>
                 `;
@@ -178,13 +168,13 @@
             if (!currentGiftId) return;
 
             try {
-                // Aktualizujemy rekord w tabeli 'Prezenty'. 
-                // Zmiana tych pól automatycznie odpali stworzony przez Ciebie Webhook do n8n!
+                // Aktualizujemy rekord w tabeli 'gifts' po 'gift_id'
                 const { error } = await supabaseClient
                     .from('gifts')
                     .update({
                         gift_reserved_by_name: guestName,
                         gift_reserved_by_email: guestEmail,
+                        gift_reserved_at: new Date().toISOString() // Automatyczna data rezerwacji dla n8n
                     })
                     .eq('gift_id', currentGiftId);
 
