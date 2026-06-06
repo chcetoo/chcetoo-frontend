@@ -142,7 +142,7 @@
                     <div>
                         ${isReserved 
                             ? `<button disabled class="w-full py-2 bg-gray-100 text-gray-400 font-medium rounded-lg cursor-not-allowed">Prezent już zarezerwowany</button>`
-                            : `<button onclick="openModal(${gift.id}, '${title.replace(/'/g, "\\'")}')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition shadow-sm">Chcę to podarować</button>`
+                          : `<button onclick="openModal(${gift.gift_id}, '${title.replace(/'/g, "\\'")}')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition shadow-sm">Chcę to podarować</button>`        
                         }
                     </div>
                 `;
