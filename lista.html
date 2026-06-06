@@ -4,193 +4,225 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chcetoo.pl - Lista Marzeń</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-50 font-sans text-gray-900 min-h-screen pb-12">
+<body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex flex-col items-center">
 
-    <header class="bg-white shadow-sm py-6 mb-8">
-        <div class="max-w-4xl mx-auto px-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-indigo-600">chcetoo.pl</h1>
-            <p class="text-gray-500 text-sm">Lista prezentów</p>
-        </div>
-    </header>
-
-    <main class="max-w-4xl mx-auto px-4">
+    <main class="w-full max-w-6xl bg-white min-h-screen shadow-2xl flex flex-col justify-between">
         
-        <div id="loader" class="text-center py-12">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p class="text-gray-600 font-medium">Ładowanie listy marzeń...</p>
+        <div>
+            <div class="w-full bg-white px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h1 class="text-2xl font-black tracking-tight text-red-500">
+                    <a href="index.html">chce<span class="text-slate-900">too.pl</span></a>
+                </h1>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">Twój asystent prezentowy</span>
+            </div>
+
+            <div id="loader" class="text-center py-24">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                <p class="text-slate-500 font-bold uppercase tracking-wider text-xs">Pobieranie listy marzeń...</p>
+            </div>
+
+            <div id="gifts-container" class="p-6 md:p-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 hidden">
+                </div>
         </div>
 
-        <div id="gifts-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
+        <footer class="bg-slate-900 text-slate-400 py-6 px-6 text-center md:flex md:justify-between md:items-center text-xs border-t border-slate-800 shrink-0">
+            <p class="font-semibold uppercase tracking-widest text-[10px] text-slate-500">© 2026 chcetoo.pl. Wszelkie prawa zastrzeżone.</p>
+            <div class="space-x-4 mt-2 md:mt-0 font-medium">
+                <a href="#" class="hover:text-white transition-colors">Regulamin</a>
+                <a href="#" class="hover:text-white transition-colors">Polityka Prywatności</a>
+                <a href="#" class="hover:text-white transition-colors">Kontakt</a>
             </div>
+        </footer>
+
     </main>
 
-    <div id="reservation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white p-6 rounded-xl shadow-xl max-w-md w-full mx-4">
-            <h3 class="text-lg font-bold text-gray-900 mb-2">Rezerwujesz prezent</h3>
-            <p id="modal-gift-title" class="text-indigo-600 font-semibold mb-4"></p>
+    <div id="reservation-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center hidden z-50">
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-3 text-xl shadow-inner">🎁</div>
+                <h3 class="text-xl font-black text-slate-900 tracking-tight">Rezerwujesz prezent</h3>
+                <p id="modal-gift-title" class="text-sm font-bold text-orange-500 mt-1 px-2 line-clamp-2"></p>
+            </div>
             
-            <form id="reservation-form" onsubmit="submitReservation(event)">
+            <form id="reservation-form" onsubmit="submitReservation(event)" class="space-y-4">
                 <input type="hidden" id="modal-gift-id">
                 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Twoje imię / ksywka</label>
-                    <input type="text" id="guest-name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                <div>
+                    <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1">Twoje imię / ksywka</label>
+                    <input type="text" id="guest-name" required placeholder="Napisz jak się nazywasz..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-sm shadow-xs font-medium">
                 </div>
                 
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Twój adres e-mail</label>
-                    <input type="email" id="guest-email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
-                    <p class="text-xs text-gray-400 mt-1">E-mail potrzebny jest wyłącznie do wysłania potwierdzenia.</p>
+                <div>
+                    <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1">Twój adres e-mail</label>
+                    <input type="email" id="guest-email" required placeholder="Twój adres e-mail..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-sm shadow-xs font-medium">
+                    <p class="text-[10px] text-slate-400 mt-1 font-medium">Adres posłuży wyłącznie do przesłania linku oraz potwierdzenia zakupu.</p>
                 </div>
                 
-                <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Anuluj</button>
-                    <button type="submit" class="px-4 py-2 text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition font-medium">Potwierdzam rezerwację</button>
+                <div class="flex space-x-3 pt-2">
+                    <button type="button" onclick="closeModal()" class="w-1/2 py-3.5 text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all uppercase tracking-wider cursor-pointer">Anuluj</button>
+                    <button type="submit" class="w-1/2 py-3.5 text-xs font-black text-white bg-orange-500 hover:bg-orange-600 rounded-xl transition-all shadow-lg shadow-orange-500/20 uppercase tracking-wider cursor-pointer">Rezerwuję</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        // ====================================================================
-        // 1. KONFIGURACJA SUPABASE
-        // ====================================================================
+        // === CONFIG SUPABASE ===
         const SUPABASE_URL = 'https://lytnirtzfmbhctmtdykk.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5dG5pcnR6Zm1iaGN0bXRkeWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MTQ1ODAsImV4cCI6MjA5NTM5MDU4MH0.wSnKSi-XHmS5uVsaqdlzI7TMDmHawqkVRQv9Tvv-wY8';
 
-        // Bezpieczna inicjalizacja klienta
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         let currentGiftId = null;
 
-        // Uruchomienie pobierania danych po załadowaniu struktury HTML
         document.addEventListener('DOMContentLoaded', fetchGifts);
 
-        // ====================================================================
-        // 2. POBIERANIE PREZENTÓW Z BAZY DATA
-        // ====================================================================
+        // Pobieranie prezentów z bazy danych
         async function fetchGifts() {
             try {
-                // Łączymy się z tabelą 'gifts' i sortujemy po 'gift_id'
                 const { data: gifts, error } = await supabaseClient
                     .from('gifts')
                     .select('*')
                     .order('gift_id', { ascending: true });
 
                 if (error) throw error;
-
                 renderGifts(gifts);
             } catch (error) {
                 console.error('Błąd podczas pobierania danych:', error);
-                alert('Nie udało się załadować listy prezentów. Sprawdź konfigurację połączenia w kodzie.');
+                alert('Nie udało się załadować listy prezentów. Spróbuj ponownie później.');
             } finally {
-                // Schowaj loader i pokaż zawartość strony
                 document.getElementById('loader').classList.add('hidden');
                 document.getElementById('gifts-container').classList.remove('hidden');
             }
         }
 
-        // ====================================================================
-        // 3. RENDEROWANIE KART W HTML (ZGODNIE Z TWOIMI KOLUMNAMI)
-        // ====================================================================
+        // Pomocnicza funkcja generująca system gwiazdek
+        function generateStarsHtml(rating) {
+            const maxStars = 5;
+            const currentRating = Math.min(Math.max(parseInt(rating) || 5, 1), maxStars);
+            let starsHtml = '<div class="flex items-center space-x-0.5" title="Priorytet: ' + currentRating + '/5">';
+            
+            for (let i = 1; i <= maxStars; i++) {
+                const isFilled = i <= currentRating;
+                starsHtml += `
+                    <svg class="w-4 h-4 ${isFilled ? 'text-amber-400' : 'text-slate-200'}" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                    </svg>
+                `;
+            }
+            starsHtml += '</div>';
+            return starsHtml;
+        }
+
+        // Renderowanie kart prezentów w HTML
         function renderGifts(gifts) {
             const container = document.getElementById('gifts-container');
             container.innerHTML = ''; 
 
             if (gifts.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-500 col-span-2">Lista prezentów jest obecnie pusta.</p>';
+                container.innerHTML = '<p class="text-center text-slate-500 col-span-full py-12 font-medium">Ta lista prezentów jest obecnie pusta.</p>';
                 return;
             }
 
             gifts.forEach(gift => {
-                // Ścisłe mapowanie pól bezpośrednio z angielskich kolumn bazy Supabase
                 const title = gift.gift_title || 'Prezent';
-                const description = gift.gift_description || 'Brak opisu.';
+                const description = gift.gift_description || 'Brak dodatkowego opisu.';
                 const link = gift.gift_link || '';
-                
-                // Prezent jest zarezerwowany, jeśli pole z imieniem w bazie NIE jest puste
+                const price = gift.gift_price ? `${gift.gift_price} PLN` : 'Brak ceny';
+                const rating = gift.gift_rating || 5;
                 const isReserved = !!gift.gift_reserved_by_name;
                 
+                // Sprawdzenie i przypisanie zdjęcia (z fallbackiem do estetycznego obrazu zastępczego)
+                const imageUrl = gift.gift_image_url || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=500&q=80';
+
                 const card = document.createElement('div');
-                card.className = `bg-white p-6 rounded-xl shadow-sm border transition flex flex-col justify-between ${isReserved ? 'border-gray-200 opacity-60' : 'border-indigo-100 hover:border-indigo-300'}`;
+                card.className = `bg-white rounded-2xl border flex flex-col overflow-hidden shadow-sm transition-all duration-300 ${
+                    isReserved 
+                        ? 'border-slate-200 opacity-60 grayscale-[20%]' 
+                        : 'border-slate-100 hover:border-slate-200 hover:shadow-xl hover:-translate-y-1'
+                }`;
 
                 card.innerHTML = `
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                            <h2 class="text-lg font-bold text-gray-900">${title}</h2>
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${isReserved ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-800'}">
+                    <div class="relative h-48 bg-slate-100 overflow-hidden shrink-0">
+                        <img src="${imageUrl}" alt="${title}" class="w-full h-full object-cover">
+                        <div class="absolute top-3 right-3">
+                            <span class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-md shadow-xs ${
+                                isReserved ? 'bg-slate-800 text-white' : 'bg-emerald-500 text-white'
+                            }">
                                 ${isReserved ? 'Zarezerwowany' : 'Dostępny'}
                             </span>
                         </div>
-                        <p class="text-gray-600 text-sm mb-4">${description}</p>
-                        ${link ? `<a href="${link}" target="_blank" class="text-indigo-500 hover:text-indigo-600 text-sm inline-flex items-center font-medium mb-4">Zobacz w sklepie &rarr;</a>` : ''}
                     </div>
-                    
-                    <div>
-                        ${isReserved 
-                            ? `<button disabled class="w-full py-2 bg-gray-100 text-gray-400 font-medium rounded-lg cursor-not-allowed">Prezent już zarezerwowany</button>`
-                            : `<button onclick="openModal(${gift.gift_id}, '${title.replace(/'/g, "\\'")}')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition shadow-sm">Chcę to podarować</button>`
-                        }
+
+                    <div class="p-5 flex flex-col justify-between flex-grow space-y-4">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                ${generateStarsHtml(rating)}
+                                <span class="text-xs font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-sm">${price}</span>
+                            </div>
+
+                            <h2 class="text-base font-black text-slate-900 tracking-tight leading-snug line-clamp-2">${title}</h2>
+                            <p class="text-slate-500 text-xs font-medium leading-relaxed line-clamp-3">${description}</p>
+                        </div>
+                        
+                        <div class="pt-2">
+                            ${isReserved 
+                                ? `<button disabled class="w-full py-3 bg-slate-100 text-slate-400 text-xs font-black rounded-xl uppercase tracking-wider cursor-not-allowed">Prezent zarezerwowany</button>`
+                                : `<button onclick="openModal(${gift.gift_id}, '${title.replace(/'/g, "\\'")}')" class="w-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-black py-3 rounded-xl transition-all shadow-md shadow-orange-500/10 uppercase tracking-wider cursor-pointer text-center block">Chcę to podarować</button>`
+                            }
+                        </div>
                     </div>
                 `;
                 container.appendChild(card);
             });
         }
 
-        // ====================================================================
-        // 4. OBSŁUGA OKIENKA MODAL
-        // ====================================================================
+        // Zarządzanie oknem modalnym
         function openModal(id, title) {
             currentGiftId = id;
             document.getElementById('modal-gift-title').innerText = title;
             document.getElementById('reservation-modal').classList.remove('hidden');
         }
 
-        // Zamknięcie okna i reset pól formularza
         function closeModal() {
             document.getElementById('reservation-modal').classList.add('hidden');
             document.getElementById('reservation-form').reset();
             currentGiftId = null;
         }
 
-        // ====================================================================
-        // 5. ZAPIS REZERWACJI I URUCHOMIENIE WEBHOOKA DLA N8N
-        // ====================================================================
+        // Zapis rezerwacji do bazy i przekierowanie na dedykowaną stronę zakupu
         async function submitReservation(event) {
             event.preventDefault();
 
-            const guestName = document.getElementById('guest-name').value;
-            const guestEmail = document.getElementById('guest-email').value;
+            const guestName = document.getElementById('guest-name').value.trim();
+            const guestEmail = document.getElementById('guest-email').value.trim();
 
             if (!currentGiftId) return;
 
             try {
-                // Aktualizujemy rekord w tabeli 'gifts' po 'gift_id'
+                // Aktualizacja statusu rezerwacji we właściwej tabeli
                 const { error } = await supabaseClient
                     .from('gifts')
                     .update({
                         gift_reserved_by_name: guestName,
                         gift_reserved_by_email: guestEmail,
-                        gift_reserved_at: new Date().toISOString() // Automatyczna data rezerwacji dla n8n
+                        gift_reserved_at: new Date().toISOString()
                     })
                     .eq('gift_id', currentGiftId);
 
                 if (error) throw error;
 
-                alert('Dziękujemy! Prezent został pomyślnie zarezerwowany.');
+                // Zamknięcie modala przed przejściem dalej
                 closeModal();
                 
-                // Przeładowanie widoku komponentów w celu zaktualizowania statusu przycisków
-                document.getElementById('loader').classList.remove('hidden');
-                document.getElementById('gifts-container').classList.add('hidden');
-                fetchGifts();
+                // STRATEGICZNA ZMIANA: Przekierowanie bezpośrednio do pliku przekierowanie.html z parametrami
+                window.location.href = `przekierowanie.html?gift_id=${currentGiftId}&name=${encodeURIComponent(guestName)}&email=${encodeURIComponent(guestEmail)}`;
 
             } catch (error) {
-                console.error('Błąd podczas próby zapisu rezerwacji:', error);
-                alert('Wystąpił problem podczas rezerwacji. Spróbuj ponownie.');
+                console.error('Błąd zapisu rezerwacji:', error);
+                alert('Wystąpił nieoczekiwany problem z rezerwacją prezentu. Spróbuj ponownie.');
             }
         }
     </script>
