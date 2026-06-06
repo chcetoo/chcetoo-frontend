@@ -187,7 +187,7 @@
                         gift_reserved_by_email: guestEmail,
                         is_reserved: true // flaga pomocnicza, jeśli występuje w bazie
                     })
-                    .eq('gifts_id', currentGiftId);
+                    .eq('gift_id', currentGiftId);
 
                 if (error) throw error;
 
