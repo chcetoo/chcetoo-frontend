@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>chcetoo.pl - Listy prezentów na każdą okazję</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .slide { transition: opacity 1.2s ease-in-out; }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex flex-col items-center">
+
+    <main class="w-full max-w-6xl bg-white min-h-screen shadow-2xl flex flex-col justify-between">
+
+        <div class="w-full bg-white px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h1 class="text-2xl font-black tracking-tight text-red-500">chce<span class="text-slate-900">too.pl</span></h1>
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">Twój asystent prezentowy</span>
+        </div>
+
+        <div class="relative w-full h-64 md:h-[400px] bg-white overflow-hidden border-b border-slate-100 shrink-0">
+            
+            <div class="slide absolute inset-0 opacity-100 flex items-center justify-between bg-[#f0f2f5]">
+                <div class="w-1/2 p-6 md:p-16 z-10">
+                    <span class="text-xs font-black uppercase tracking-wider text-red-500 bg-red-100 px-2 py-1 rounded">NOWOŚĆ!</span>
+                    <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-2 uppercase leading-tight">Dostaję tylko<br><span class="text-red-500">oczekiwane</span> prezenty</h2>
+                </div>
+                <div class="w-1/2 h-full bg-cover bg-right" style="background-image: url('https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=800&q=80');"></div>
+            </div>
+
+            <div class="slide absolute inset-0 opacity-0 flex items-center justify-between bg-[#eef5f9]">
+                <div class="w-1/2 p-6 md:p-16 z-10">
+                    <span class="text-xs font-black uppercase tracking-wider text-red-500 bg-red-100 px-2 py-1 rounded">NOWOŚĆ!</span>
+                    <h2 class="text-lg md:text-3xl font-black text-slate-900 mt-2 uppercase leading-tight">Ułatwiamy gościom weselnym kupienie <span class="text-red-500">trafionych</span> prezentów!</h2>
+                </div>
+                <div class="w-1/2 h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80');"></div>
+            </div>
+
+            <div class="slide absolute inset-0 opacity-0 flex items-center justify-between bg-[#faf6f0]">
+                <div class="w-1/2 p-6 md:p-16 z-10">
+                    <span class="text-xs font-black uppercase tracking-wider text-red-500 bg-red-100 px-2 py-1 rounded">NOWOŚĆ!</span>
+                    <h2 class="text-lg md:text-3xl font-black text-slate-900 mt-2 uppercase leading-tight">Moje koleżanki nie kupują mi zbędnych <span class="text-red-500">gadżetów!</span></h2>
+                </div>
+                <div class="w-1/2 h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&w=800&q=80');"></div>
+            </div>
+
+            <div class="slide absolute inset-0 opacity-0 flex items-center justify-between bg-[#fcedeb]">
+                <div class="w-1/2 p-6 md:p-16 z-10">
+                    <span class="text-xs font-black uppercase tracking-wider text-red-500 bg-red-100 px-2 py-1 rounded">NOWOŚĆ!</span>
+                    <h2 class="text-lg md:text-3xl font-black text-slate-900 mt-2 uppercase leading-tight">Mikołaj zawsze wie, co mi kupić <span class="text-red-500">na prezent!</span></h2>
+                </div>
+                <div class="w-1/2 h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1543589077-47d81606c1bf?auto=format&fit=crop&w=800&q=80');"></div>
+            </div>
+        </div>
+
+        <div class="p-6 md:p-12 bg-white flex-grow grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-start">
+            
+            <div class="bg-slate-50 p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm">
+                <div class="mb-6">
+                    <h3 class="text-lg md:text-xl font-black text-slate-900">CO KUPIĆ NA PREZENT?</h3>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Znajdź gotową listę bliskiej osoby</p>
+                </div>
+
+                <div class="space-y-4">
+                    <input type="text" id="search-email" placeholder="Podaj e-mail znajomego..." 
+                           class="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-base shadow-xs">
+                    
+                    <button onclick="handleSearch()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 px-4 rounded-xl shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all text-base cursor-pointer tracking-wider uppercase flex items-center justify-center space-x-2">
+                        <span id="search-btn-text">👁️ Zobacz listę</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-full">
+                <div class="mb-6">
+                    <h3 class="text-lg md:text-xl font-black text-slate-900">MOJA LISTA PREZENTÓW</h3>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Zarządzaj swoimi marzeniami i Koszykiem AI</p>
+                </div>
+
+                <div class="space-y-4">
+                    <p class="text-sm text-slate-500 leading-relaxed">
+                        Zaloguj się, aby edytować swoją listę, dodawać nowe zachcianki za pomocą AI lub sprawdzić, co zostało już zarezerwowane.
+                    </p>
+                    
+                    <button onclick="openLoginModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 px-4 rounded-xl flex items-center justify-center space-x-2 active:scale-[0.98] transition-all text-sm cursor-pointer uppercase tracking-wider">
+                        <span>Zaloguj się / Załóż konto 👤</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <footer class="bg-slate-900 text-slate-400 py-6 px-6 text-center md:flex md:justify-between md:items-center text-xs border-t border-slate-800 shrink-0">
+            <p class="font-semibold uppercase tracking-widest text-[10px] text-slate-500">© 2026 chcetoo.pl. Wszelkie prawa zastrzeżone.</p>
+            <div class="space-x-4 mt-2 md:mt-0 font-medium">
+                <a href="#" class="hover:text-white transition-colors">Regulamin</a>
+                <a href="#" class="hover:text-white transition-colors">Polityka Prywatności</a>
+                <a href="#" class="hover:text-white transition-colors">Kontakt</a>
+            </div>
+        </footer>
+
+    </main>
+
+    <script>
+        // === CONFIG SUPABASE ===
+        const SUPABASE_URL = "https://lytnirtzfmbhctmtdykk.supabase.co/rest/v1/"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5dG5pcnR6Zm1iaGN0bXRkeWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MTQ1ODAsImV4cCI6MjA5NTM5MDU4MH0.wSnKSi-XHmS5uVsaqdlzI7TMDmHawqkVRQv9Tvv-wY8";
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Zarządzanie slajderem
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+
+        function nextSlide() {
+            slides[currentSlide].style.opacity = 0;
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].style.opacity = 1;
+        }
+        setInterval(nextSlide, 6000);
+
+        // NAPRAWIONE: Dynamiczne wyszukiwanie użytkownika w angielskiej tabeli 'users'
+        async function handleSearch() {
+            const emailInput = document.getElementById("search-email").value.trim();
+            const btnText = document.getElementById("search-btn-text");
+
+            if (!emailInput) { 
+                alert("Proszę wpisać adres e-mail znajomego."); 
+                return; 
+            }
+
+            try {
+                btnText.innerText = "Szukanie... ⏳";
+
+                // Wykonujemy rzeczywiste zapytanie do bazy Supabase
+                // Zakładam, że kolumna przechowująca email użytkownika w tabeli 'users' nazywa się 'email'
+                const { data: userRecord, error } = await supabase
+                    .from('users')
+                    .select('id')
+                    .eq('email', emailInput)
+                    .maybeSingle(); // Unikamy błędu crashu, jeśli nie znajdzie nikogo
+
+                if (error) throw error;
+
+                if (!userRecord) {
+                    alert("Nie znaleziono listy przypisanej do tego adresu e-mail. Upewnij się, czy adres jest poprawny.");
+                    btnText.innerText = "👁️ Zobacz listę";
+                    return;
+                }
+
+                // Sukces: Znaleźliśmy użytkownika, przekierowujemy na jego listę prezentów!
+                window.location.href = `lista.html?user=${userRecord.id}`;
+
+            } catch (err) {
+                console.error("Błąd wyszukiwania:", err);
+                alert("Wystąpił nieoczekiwany problem z połączeniem. Spróbuj ponownie później.");
+                btnText.innerText = "👁️ Zobacz listę";
+            }
+        }
+
+        function openLoginModal() {
+            alert("Otwieranie nowoczesnego panelu logowania...");
+        }
+    </script>
+</body>
+</html>

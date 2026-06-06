@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prezent Zarezerwowany! - chcetoo.pl</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl border border-slate-100 relative text-center">
+        
+        <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-500 text-2xl shadow-inner animate-bounce">
+            🎉
+        </div>
+
+        <h2 class="text-2xl font-black text-slate-900 tracking-tight">Prezent zarezerwowany!</h2>
+        <p class="text-sm text-slate-500 mt-1">Udało się! Zablokowaliśmy ten product specjalnie dla Ciebie.</p>
+
+        <div class="bg-slate-50 rounded-2xl p-4 my-6 border border-slate-100 text-left">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Wybrany prezent</span>
+            <span id="gift-name-display" class="font-bold text-slate-800 text-base block mt-0.5">Ładowanie nazwy...</span>
+        </div>
+
+        <div class="bg-amber-50/60 rounded-2xl p-5 border border-amber-100 text-left space-y-3 mb-6">
+            <h4 class="font-black text-amber-800 text-xs uppercase tracking-wider flex items-center">
+                <span class="mr-1.5 text-base">⚠️</span> Bardzo ważne: Jak dokończyć zakup?
+            </h4>
+            <ol class="text-xs text-amber-900/80 space-y-2 list-decimal pl-4 font-medium">
+                <li>Kliknij poniższy przycisk <strong>"Przejdź do sklepu i kup"</strong>, aby otworzyć właściwą stronę produktu.</li>
+                <li>Dokonaj zakupu bezpośrednio w otwartym oknie (prosimy nie zamykać karty i nie szukać produktu na własną rękę, dzięki temu wspierasz nasz serwis!).</li>
+                <li>Po sfinalizowaniu zakupu wróć tutaj i kliknij przycisk na samym dole, aby potwierdzić transakcję.</li>
+            </ol>
+        </div>
+
+        <div class="border-t border-b border-slate-100 py-4 my-6 text-left">
+            <label class="flex items-start space-x-3 cursor-pointer group">
+                <div class="flex items-center h-5 mt-0.5">
+                    <input id="marketing-consent" type="checkbox" checked class="w-4 h-4 rounded text-orange-500 border-slate-300 focus:ring-orange-500 bg-slate-50 cursor-pointer">
+                </div>
+                <div class="text-xs">
+                    <span class="font-bold text-slate-700 group-hover:text-slate-900 transition-colors">Wyrażam zgodę na otrzymywanie informacji email od chcetoo.pl</span>
+                    <p class="text-[10px] text-slate-400 mt-0.5 font-medium">Zgoda jest dobrowolna. Będziemy podrzucać Ci przydatne wskazówki, przypomnienia o okazjach oraz informacje o nowościach.</p>
+                </div>
+            </label>
+        </div>
+
+        <div class="space-y-3">
+            <a id="shop-link-btn" href="#" target="_blank" class="w-full bg-slate-200 text-slate-400 font-black py-4 px-6 rounded-xl text-sm uppercase tracking-wider transition-all block text-center pointer-events-none">
+                Pobieranie linku do sklepu... ⏳
+            </a>
+
+            <button id="finish-btn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-xl text-xs uppercase tracking-widest transition-all block text-center cursor-pointer">
+                2. Potwierdzam zakup prezentu
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // === CONFIG SUPABASE ===
+        const SUPABASE_URL = "https://lytnirtzfmbhctmtdykk.supabase.co/rest/v1/"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5dG5pcnR6Zm1iaGN0bXRkeWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MTQ1ODAsImV4cCI6MjA5NTM5MDU4MH0.wSnKSi-XHmS5uVsaqdlzI7TMDmHawqkVRQv9Tvv-wY8";
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Odczytanie parametrów przesłanych z adresu URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const giftId = urlParams.get('gift_id') || urlParams.get('gift'); // Elastyczne pobranie ID
+        const guestName = decodeURIComponent(urlParams.get('name') || '');
+        const guestEmail = decodeURIComponent(urlParams.get('email') || '');
+
+        const shopBtn = document.getElementById('shop-link-btn');
+
+        // Dynamiczne pobieranie danych o prezencie z właściwej tabeli 'gifts'
+        async function loadGiftDetails() {
+            if (!giftId) {
+                document.getElementById('gift-name-display').textContent = "Nieznany prezent";
+                return;
+            }
+
+            // Zapytanie do poprawnej anglojęzycznej tabeli
+            const { data: gift, error } = await supabase
+                .from('gifts')
+                .select('gift_title, gift_link')
+                .eq('gift_id', giftId)
+                .single();
+
+            if (error || !gift) {
+                console.error("Błąd ładowania linku afiliacyjnego:", error);
+                document.getElementById('gift-name-display').textContent = "Wybrany prezent";
+                shopBtn.innerText = "Przejdź do sklepu 🛒";
+                shopBtn.href = "https://chcetoo.pl"; // Awaryjny link
+                shopBtn.className = "w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 px-6 rounded-xl text-sm uppercase tracking-wider transition-all shadow-md block text-center";
+                return;
+            }
+
+            // Ustawienie poprawnej nazwy oraz linku afiliacyjnego ze struktury bazy danych
+            document.getElementById('gift-name-display').textContent = gift.gift_title;
+            shopBtn.href = gift.gift_link || "https://chcetoo.pl";
+            shopBtn.innerText = "1. Przejdź do sklepu i kup 🛒";
+            shopBtn.className = "w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 px-6 rounded-xl text-sm uppercase tracking-wider transition-all shadow-md block text-center";
+        }
+
+        // Obsługa kliknięcia "Potwierdzam zakup prezentu"
+        document.getElementById('finish-btn').addEventListener('click', async () => {
+            const isConsentChecked = document.getElementById('marketing-consent').checked;
+
+            // NAPRAWIONE: Prawdziwy zapis zgody marketingowej do Twojej tabeli users_notifications
+            if (isConsentChecked && guestEmail) {
+                const { error: consentError } = await supabase
+                    .from('users_notifications')
+                    .insert([
+                        { 
+                            email: guestEmail, 
+                            name: guestName,
+                            marketing_agreed: true,
+                            created_at: new Date().toISOString()
+                        }
+                    ]);
+
+                if (consentError) {
+                    console.error("Błąd zapisu zgody marketingowej:", consentError);
+                } else {
+                    console.log("Zgoda marketingowa zapisana pomyślnie do bazy danych.");
+                }
+            }
+
+            // Przekierowanie końcowe
+            alert("Dziękujemy za sprawienie radości solenizantowi! Rezerwacja została ostatecznie potwierdzona.");
+            window.location.href = "https://chcetoo.pl";
+        });
+
+        // Uruchomienie procedury sprawdzania danych po wejściu na stronę
+        loadGiftDetails();
+    </script>
+</body>
+</html>
