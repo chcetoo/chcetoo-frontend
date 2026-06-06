@@ -12,6 +12,7 @@
     <main class="w-full max-w-6xl bg-white min-h-screen shadow-2xl flex flex-col justify-between">
         
         <div>
+            <!-- NAGŁÓWEK -->
             <div class="w-full bg-white px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                 <h1 class="text-2xl font-black tracking-tight text-orange-500">
                     <a href="index.html">chce<span class="text-slate-900">too.pl</span></a>
@@ -19,10 +20,13 @@
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">Twój asystent prezentowy</span>
             </div>
 
+            <!-- PANEL WYSZUKIWANIA, FILTROWANIA I SORTOWANIA -->
             <div class="p-6 md:px-12 md:pt-8 md:pb-2 grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+                <!-- Wyszukiwarka tekstowa -->
                 <div class="relative">
                     <input type="text" id="search-input" oninput="filterAndRenderGifts()" placeholder="Szukaj prezentu..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-sm font-medium shadow-sm">
                 </div>
+                <!-- Filtrowanie statusu -->
                 <div>
                     <select id="status-filter" onchange="filterAndRenderGifts()" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-sm font-medium shadow-sm cursor-pointer">
                         <option value="all">Wszystkie prezenty</option>
@@ -30,6 +34,7 @@
                         <option value="reserved">Zarezerwowane</option>
                     </select>
                 </div>
+                <!-- Sortowanie -->
                 <div>
                     <select id="sort-filter" onchange="filterAndRenderGifts()" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-sm font-medium shadow-sm cursor-pointer">
                         <option value="default">Sortowanie domyślne</option>
@@ -40,15 +45,19 @@
                 </div>
             </div>
 
+            <!-- LOADER -->
             <div id="loader" class="text-center py-24">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
                 <p class="text-slate-500 font-bold uppercase tracking-wider text-xs">Pobieranie listy marzeń...</p>
             </div>
 
+            <!-- KONTENER NA PREZENTY -->
             <div id="gifts-container" class="p-6 md:p-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 hidden">
-                </div>
+                <!-- Karty generowane przez JS -->
+            </div>
         </div>
 
+        <!-- STOPKA -->
         <footer class="bg-slate-900 text-slate-400 py-6 px-6 text-center md:flex md:justify-between md:items-center text-xs border-t border-slate-800 shrink-0 mt-auto">
             <p class="font-semibold uppercase tracking-widest text-[10px] text-slate-500">© 2026 chcetoo.pl. Wszelkie prawa zastrzeżone.</p>
             <div class="space-x-4 mt-2 md:mt-0 font-medium">
@@ -60,6 +69,7 @@
 
     </main>
 
+    <!-- MODAL REZERWACJI -->
     <div id="reservation-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center hidden z-50">
         <div class="bg-white p-6 md:p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-slate-100">
             <div class="text-center mb-6">
@@ -120,7 +130,6 @@
             }
         }
 
-        // Funkcja pomocnicza do dynamicznego pobierania wartości pól na podstawie dostępnych kluczy w bazie
         function getGiftValue(gift, keysArray) {
             for (let key of keysArray) {
                 if (gift && key in gift && gift[key] !== undefined && gift[key] !== null) {
@@ -128,6 +137,31 @@
                 }
             }
             return null;
+        }
+
+        // Pancerne przetwarzanie surowego tekstu ceny na czytelny format liczbowy lub tekstowy
+        function parsePrice(rawPrice) {
+            if (rawPrice === undefined || rawPrice === null || rawPrice === '') {
+                return 'Brak ceny';
+            }
+            
+            let priceStr = String(rawPrice).trim();
+            // Jeśli baza przechowuje już dopisek waluty, spróbujmy go ładnie sformatować
+            if (priceStr.toLowerCase().includes('zł') || priceStr.toUpperCase().includes('PLN')) {
+                return priceStr; 
+            }
+
+            // Czyszczenie ze zbędnych znaków i zamiana przecinków na kropki programistyczne
+            let cleanStr = priceStr.replace(',', '.').replace(/[^\d.]/g, '');
+            const parsed = parseFloat(cleanStr);
+            
+            return !isNaN(parsed) ? `${parsed.toFixed(2)} PLN` : priceStr;
+        }
+
+        function getPriceNum(gift) {
+            let p = getGiftValue(gift, ['price', 'gift_price', 'cena']) ?? 0;
+            if (typeof p === 'string') p = p.replace(',', '.').replace(/[^\d.]/g, '');
+            return parseFloat(p) || 0;
         }
 
         function filterAndRenderGifts() {
@@ -150,14 +184,7 @@
                 return matchesSearch && matchesStatus;
             });
 
-            // Pobieranie ceny do sortowania
-            const getPriceNum = (gift) => {
-                let p = getGiftValue(gift, ['price', 'gift_price', 'cena']) ?? 0;
-                if (typeof p === 'string') p = p.replace(',', '.').replace(/[^\d.]/g, '');
-                return parseFloat(p) || 0;
-            };
-
-            // Sortowanie
+            // Sortowanie listy
             if (sortFilter === 'price-asc') {
                 filteredGifts.sort((a, b) => getPriceNum(a) - getPriceNum(b));
             } else if (sortFilter === 'price-desc') {
@@ -195,7 +222,6 @@
             }
 
             gifts.forEach(gift => {
-                // Wyciąganie wartości z automatycznym dopasowaniem pól
                 const title = getGiftValue(gift, ['title', 'gift_title', 'nazwa']) || 'Prezent';
                 const description = getGiftValue(gift, ['description', 'gift_description', 'opis']) || 'Brak dodatkowego opisu.';
                 const link = getGiftValue(gift, ['link', 'gift_link', 'site_url', 'url']) || '#';
@@ -205,22 +231,21 @@
                 const reservedName = getGiftValue(gift, ['reserved_by_name', 'gift_reserved_by_name', 'reserved_by']);
                 const isReserved = !!reservedName;
                 
-                // Parsowanie ceny
-                let rawPrice = getGiftValue(gift, ['price', 'gift_price', 'cena']);
-                let priceDisplay = 'Brak ceny';
-                if (rawPrice !== undefined && rawPrice !== null && rawPrice !== '') {
-                    if (typeof rawPrice === 'string') {
-                        rawPrice = rawPrice.replace(',', '.').replace(/[^\d.]/g, '');
-                    }
-                    const parsedPrice = parseFloat(rawPrice);
-                    if (!isNaN(parsedPrice)) priceDisplay = `${parsedPrice.toFixed(2)} PLN`;
-                }
+                // Wyciąganie i interpretacja ceny
+                const priceDisplay = parsePrice(getGiftValue(gift, ['price', 'gift_price', 'cena']));
 
-                // Pobieranie linku do zdjęcia
+                // POPRAWKA ŚCIEŻKI ZDJĘCIA: Konwersja ścieżek względnych pod lokalny folder serwera
                 let rawImage = getGiftValue(gift, ['image_url', 'gift_image_url', 'image', 'gift_image', 'zdjecie', 'foto']);
-                let imageUrl = 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=500&q=80';
+                let imageUrl = 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=500&q=80'; // Tło zapasowe
+                
                 if (rawImage && typeof rawImage === 'string' && rawImage.trim() !== '') {
-                    imageUrl = rawImage.trim();
+                    let cleanImg = rawImage.trim();
+                    // Jeśli ścieżka zaczyna się bezpośrednio od "pobrane/", dodajemy "./", aby wskazać folder lokalny projektu
+                    if (cleanImg.startsWith('pobrane/')) {
+                        imageUrl = './' + cleanImg;
+                    } else {
+                        imageUrl = cleanImg;
+                    }
                 }
 
                 const card = document.createElement('div');
@@ -230,6 +255,7 @@
 
                 card.innerHTML = `
                     <div class="relative h-48 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
+                        <!-- Mechanizm onerror podmienia niedziałający link lokalny na ładne, uniwersalne zdjęcie prezentu -->
                         <img src="${imageUrl}" alt="${title}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=500&q=80';">
                         <div class="absolute top-3 right-3">
                             <span class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-md shadow-sm ${
@@ -283,7 +309,6 @@
 
             if (!currentGiftId || allGifts.length === 0) return;
 
-            // Wykrywanie jakich kolumn rezerwacyjnych używa pierwszy rekord
             const firstGift = allGifts[0];
             const idKey = 'id' in firstGift ? 'id' : 'gift_id';
             const resNameKey = 'reserved_by_name' in firstGift ? 'reserved_by_name' : 'gift_reserved_by_name';
