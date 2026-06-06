@@ -103,15 +103,18 @@
     </main>
 
     <script>
-        // === CONFIG SUPABASE ===
-        const SUPABASE_URL = "https://lytnirtzfmbhctmtdykk.supabase.co/rest/v1/"; 
+        // === CONFIG SUPABASE (NAPRAWIONY ADRES I INICJALIZACJA) ===
+        const SUPABASE_URL = "https://lytnirtzfmbhctmtdykk.supabase.co"; 
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5dG5pcnR6Zm1iaGN0bXRkeWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MTQ1ODAsImV4cCI6MjA5NTM5MDU4MH0.wSnKSi-XHmS5uVsaqdlzI7TMDmHawqkVRQv9Tvv-wY8";
-        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Poprawna inicjalizacja z małej litery
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // Zarządzanie slajderem
         const slides = document.querySelectorAll('.slide');
         let currentSlide = 0;
 
+        / Track status slajdera
         function nextSlide() {
             slides[currentSlide].style.opacity = 0;
             currentSlide = (currentSlide + 1) % slides.length;
@@ -119,7 +122,7 @@
         }
         setInterval(nextSlide, 6000);
 
-        // NAPRAWIONE: Dynamiczne wyszukiwanie użytkownika w angielskiej tabeli 'users'
+        // Wyszukiwanie użytkownika w tabeli 'users'
         async function handleSearch() {
             const emailInput = document.getElementById("search-email").value.trim();
             const btnText = document.getElementById("search-btn-text");
@@ -132,13 +135,12 @@
             try {
                 btnText.innerText = "Szukanie... ⏳";
 
-                // Wykonujemy rzeczywiste zapytanie do bazy Supabase
-                // Zakładam, że kolumna przechowująca email użytkownika w tabeli 'users' nazywa się 'email'
-                const { data: userRecord, error } = await supabase
+                // Zapytanie z użyciem poprawnego klienta bazy danych
+                const { data: userRecord, error } = await supabaseClient
                     .from('users')
                     .select('id')
                     .eq('email', emailInput)
-                    .maybeSingle(); // Unikamy błędu crashu, jeśli nie znajdzie nikogo
+                    .maybeSingle(); 
 
                 if (error) throw error;
 
@@ -148,7 +150,7 @@
                     return;
                 }
 
-                // Sukces: Znaleźliśmy użytkownika, przekierowujemy na jego listę prezentów!
+                // Sukces: Przekierowanie na dynamiczny adres listy
                 window.location.href = `lista.html?user=${userRecord.id}`;
 
             } catch (err) {
