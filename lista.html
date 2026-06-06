@@ -86,9 +86,9 @@
             try {
                 // Łączymy się z tabelą 'Prezenty' zgodnie z konfiguracją w Supabase
                 const { data: gifts, error } = await supabaseClient
-                    .from('Prezenty')
+                    .from('gifts')
                     .select('*')
-                    .order('id', { ascending: true });
+                    .order('gift_id', { ascending: true });
 
                 if (error) throw error;
 
